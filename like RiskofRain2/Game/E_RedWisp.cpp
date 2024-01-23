@@ -19,7 +19,7 @@ E_RedWisp::E_RedWisp()
 	m_player = FindGO<Player>("player");
 
 	//EffectEngine::GetInstance()->ResistEffect(0, u"Assets/effect/fire.efk");
-	EffectEngine::GetInstance()->ResistEffect(0, u"Assets/effect/fire_b.efk");
+	//EffectEngine::GetInstance()->ResistEffect(0, u"Assets/effect/fire_b.efk");
 }
 
 void E_RedWisp::ShowRedWisp()

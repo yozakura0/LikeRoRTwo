@@ -14,11 +14,34 @@ Player::Player()
 		m_position
 	);
 
-	m_playerAnimationClips[ANIMATION_IDLE].Load("Assets/animData/idle.tka");
+	/*m_playerAnimationClips[ANIMATION_IDLE].Load("Assets/animData/player/idle.tka");
 	m_playerAnimationClips[ANIMATION_IDLE].SetLoopFlag(true);
+	m_playerAnimationClips[ANIMATION_WALK].Load("Assets/animData/player/run_shot.tka");
+	m_playerAnimationClips[ANIMATION_WALK].SetLoopFlag(true);*/
+
+	/*m_playerBodyAnimationClips[B_ANIMATION_IDLE].Load("Assets/animData/player/body_stand.tka");
+	m_playerBodyAnimationClips[B_ANIMATION_IDLE].SetLoopFlag(true);*/
+	/*m_playerBodyAnimationClips[B_ANIMATION_WALK].Load("Assets/animData/player/run_shot.tka");
+	m_playerBodyAnimationClips[B_ANIMATION_WALK].SetLoopFlag(true);*/
+	/*m_playerBodyAnimationClips[B_ANIMATION_RUN].Load("Assets/animData/player/body_run.tka");
+	m_playerBodyAnimationClips[B_ANIMATION_RUN].SetLoopFlag(true);
+	m_playerBodyAnimationClips[B_ANIMATION_SHOT].Load("Assets/animData/player/body_shot.tka");
+	m_playerBodyAnimationClips[B_ANIMATION_SHOT].SetLoopFlag(true);
+
+	m_playerFootAnimationClips[F_ANIMATION_IDLE].Load("Assets/animData/player/foot_stand.tka");
+	m_playerFootAnimationClips[F_ANIMATION_IDLE].SetLoopFlag(true);
+	m_playerFootAnimationClips[F_ANIMATION_WALK].Load("Assets/animData/player/foot_walk.tka");
+	m_playerFootAnimationClips[F_ANIMATION_WALK].SetLoopFlag(true);*/
 
 	//モデルを読み込む
-	m_playerRender.Init("Assets/modelData/unityChan.tkm", m_playerAnimationClips, ANIMATION_NUM, enModelUpAxisY);
+	m_playerRender.Init("Assets/modelData/player/robotSoldier.tkm"/*, m_playerAnimationClips, ANIMATION_NUM, enModelUpAxisY*/);
+
+	/*m_playerBodyRender.Init("Assets/modelData/player/body.tkm", m_playerBodyAnimationClips, B_ANIMATION_NUM, enModelUpAxisZ);
+
+	m_playerFootRender.Init("Assets/modelData/player/foot.tkm", m_playerFootAnimationClips, F_ANIMATION_NUM, enModelUpAxisZ);*/
+
+	/*m_playerBodyRender.SetScale(Vector3(0.4f, 0.4f, 0.4f));
+	m_playerFootRender.SetScale(Vector3(0.4f, 0.4f, 0.4f));*/
 
 	//m_playerItemList_rare[frostRelic][havingItemNum]++;
 }
@@ -48,6 +71,9 @@ void Player::Update()
 
 	Move();
 	Turn();
+	//StateManage();
+	//m_playerRender.PlayAnimation(ANIMATION_WALK, 0.2f);
+	//AnimationState();
 	Action();
 	ItemPower();
 	Damaged();
@@ -70,9 +96,13 @@ void Player::Update()
 		m_playerHP = m_playerMaxHP;
 	}
 
-	m_playerRender.PlayAnimation(ANIMATION_IDLE, 0.2f);
+	//足のアニメーションを設定
+	//m_playerFootRender.PlayAnimation(ANIMATION_IDLE, 0.2f);
 
 	m_playerRender.Update();
+	////足の更新
+	//m_playerFootRender.Update();
+	//m_playerBodyRender.Update();
 
 	//デバッグ:座標の表示
 	swprintf_s(m_posText, 256, L"x:%f,y:%f,z:%f", m_gameCamera->m_rayHitPos.x, m_gameCamera->m_rayHitPos.y, m_gameCamera->m_rayHitPos.z);
@@ -151,29 +181,135 @@ void Player::Move()
 		m_moveSpeed.y = FirstMoveSpeed.y;
 	}
 
+
 	//座標を設定
 	m_playerRender.SetPosition(m_position);
+	////足の座標を設定
+	//m_playerFootRender.SetPosition(m_position);
+
+	//m_playerBodyRender.SetPosition(m_position);
 }
 
 void Player::Turn()
 {
-	//移動していない時、
+	//移動も射撃もしていない時、
 	if (fabsf(m_moveSpeed.x) < NoneMoveJudge
-		&& fabsf(m_moveSpeed.z) < NoneMoveJudge)
+		&& fabsf(m_moveSpeed.z) < NoneMoveJudge
+		&& g_pad[0]->IsTrigger(enButtonRB2) != true)
 	{
 		//処理をスキップする
 		return;
 	}
+	
+	//射撃中のとき
+	if (g_pad[0]->IsTrigger(enButtonRB2))
+	{
+		m_rotation.SetRotationYFromDirectionXZ(m_gameCamera->m_rayHitPos - m_position);
 
-	//回転する角度を求める
-	float angle = atan2(-m_moveSpeed.x, m_moveSpeed.z);
-	m_rotation.SetRotationY(-angle);
+		////足の角度を設定
+		//m_playerFootRender.SetRotation(m_rotation);
+		////
+		//m_playerBodyRender.SetRotation(m_rotation);
+	}
+	//移動中のとき
+	else
+	{
+		//回転する角度を求める
+		float angle = atan2(-m_moveSpeed.x, m_moveSpeed.z);
+		m_rotation.SetRotationY(-angle);
+	}
 
 	//角度を設定する
 	m_playerRender.SetRotation(m_rotation);
+	////足の角度を設定
+	//m_playerFootRender.SetRotation(m_rotation);
+	////
+	//m_playerBodyRender.SetRotation(m_rotation);
 
 	m_forward = Vector3::AxisZ;
 	m_rotation.Apply(m_forward);
+}
+
+void Player::StateManage()
+{
+	//体の状態遷移
+	//射撃ボタンが押されている時
+	if (g_pad[0]->IsTrigger(enButtonRB2))
+	{
+		m_bodyAnimationStateNumber = SHOT;
+	}
+	//歩いていない時、ジャンプ中の時
+	else if (fabsf(m_moveSpeed.x) < NoneMoveJudge
+		&& fabsf(m_moveSpeed.z) < NoneMoveJudge
+		|| m_characterController.IsOnGround() == false)
+	{
+		m_bodyAnimationStateNumber = IDLE;
+	}
+	//走っている時
+	else if (m_dashFlag == true)
+	{
+		m_bodyAnimationStateNumber = RUN;
+	}
+	//それ以外の(歩いている)時
+	else
+	{
+		m_bodyAnimationStateNumber = WALK;
+	}
+
+	//足の状態遷移
+	//移動してない時、ジャンプしている時
+	if (fabsf(m_moveSpeed.x) < NoneMoveJudge
+		&& fabsf(m_moveSpeed.z) < NoneMoveJudge
+		|| m_characterController.IsOnGround() == false)
+	{
+		m_footAnimationStateNumber = IDLE;
+	}
+	//それ以外の(移動している)時
+	else
+	{
+		m_footAnimationStateNumber = WALK;
+	}
+}
+//
+void Player::AnimationState()
+{
+	//体のアニメーション
+	switch (m_bodyAnimationStateNumber)
+	{
+	case IDLE:
+		m_playerBodyRender.PlayAnimation(B_ANIMATION_IDLE, 0.2f);
+		m_playerBodyRender.SetAnimationSpeed(1.0f);
+		break;
+	case WALK:
+		m_playerBodyRender.PlayAnimation(B_ANIMATION_WALK, 0.2f);
+		m_playerBodyRender.SetAnimationSpeed(1.0f);
+		break;
+	case RUN:
+		m_playerBodyRender.PlayAnimation(B_ANIMATION_RUN, 0.2f);
+		m_playerBodyRender.SetAnimationSpeed(1.0f);
+		break;
+	case SHOT:
+		m_playerBodyRender.PlayAnimation(B_ANIMATION_SHOT, 0.2f);
+		m_playerBodyRender.SetAnimationSpeed(1.5f);
+		break;
+	default:
+		break;
+	}
+
+	//足のアニメーション
+	switch (m_footAnimationStateNumber)
+	{
+	case IDLE:
+		m_playerFootRender.PlayAnimation(F_ANIMATION_IDLE, 0.2f);
+		m_playerFootRender.SetAnimationSpeed(1.0f);
+		break;
+	case WALK:
+		m_playerFootRender.PlayAnimation(F_ANIMATION_WALK, 0.2f);
+		m_playerFootRender.SetAnimationSpeed(1.005f);
+		break;
+	default:
+		break;
+	}
 }
 
 void Player::LevelUp()
@@ -528,6 +664,16 @@ void Player::Attack()
 		//shotManager->SetRotation(m_shotRotation);
 		shotManager->NormalShot();
 		m_normalShot = false;
+
+
+		////エフェクトを再生する
+		//EffectEmitter* effectEmitter = NewGO<EffectEmitter>(0);
+
+		//effectEmitter->Init(0);
+		//effectEmitter->SetScale({ 1.0f,1.0f,1.0f });
+		//effectEmitter->SetPosition({ m_position.x, m_position.y ,m_position.z });
+		////effectEmitter->Update();
+		//effectEmitter->Play();
 	}
 }
 
@@ -580,4 +726,6 @@ void Player::Render(RenderContext& rc)
 	
 	//描画
 	m_playerRender.Draw(rc);
+	/*m_playerBodyRender.Draw(rc);
+	m_playerFootRender.Draw(rc);*/
 }

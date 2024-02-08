@@ -32,17 +32,12 @@ public:
 	void ItemGet(int itemRarity, int itemNum);
 	//持っているアイテムの恩恵
 	void ItemPower();
+	//状態遷移
+	void StateManage();
+	//アニメーション
+	void AnimationState();
 	void Render(RenderContext& rc);
 
-	//モデルレンダー
-	ModelRender m_playerRender;
-
-
-	//デバッグ:レンダー
-	ModelRender m_testRen;
-	FontRender m_fontRender;
-	FontRender m_posfontRender;
-	
 	wchar_t m_posText[256];
 	//プレイヤーの初期座標
 	const Vector3 m_firstPosition = { 0.0f,100.0f,300.0f };
@@ -54,9 +49,6 @@ public:
 	Vector3 m_moveSpeed;
 	//プレイヤーの角度
 	Quaternion m_rotation;
-
-	//受けたダメージ量
-	float m_receiveDamage = m_firstReceiveDamage;
 
 	//行動を起こしたか
 	bool m_actionFlag = false;
@@ -72,7 +64,50 @@ public:
 		m_killEnemyFlag = true;
 	}
 
+	//受けたダメージ量を設定する
+	void SetReceiveDamage(int damage)
+	{
+		m_receiveDamage = damage;
+	}
+
+	//所持金を追加する
+	void AddMoney(int money)
+	{
+		m_money += money;
+	}
+	//所持金を減らす
+	void DecMoney(int money)
+	{
+		m_money -= money;
+	}
+	//所持金を取得する
+	int GetMoney()
+	{
+		return m_money;
+	}
+	//ダメージを受けたか
+	bool IsReceiveDamage()
+	{
+		if (m_invincibleFlag == true)
+		{
+			return true;
+		}
+		
+		return false;
+	}
+
 private:
+	//モデルレンダー
+	ModelRender m_playerRender;
+
+	ModelRender m_playerBodyRender;
+	ModelRender m_playerFootRender;
+
+	//デバッグ:レンダー
+	ModelRender m_testRen;
+	FontRender m_fontRender;
+	FontRender m_posfontRender;
+
 	//参考はコマンドー
 	//プレイヤーのレベル
 	int m_playerLevel = 1;
@@ -110,6 +145,8 @@ private:
 	//スティック入力に対する移動速度の倍率
 	float m_playerMoveMultiplier = 200.0f;
 
+	//受けたダメージ量
+	float m_receiveDamage = m_firstReceiveDamage;
 	//無敵フラグ
 	bool m_invincibleFlag = false;
 	//無敵時間
@@ -205,6 +242,35 @@ private:
 		ANIMATION_NUM
 	};
 	AnimationClip m_playerAnimationClips[ANIMATION_NUM];
+
+	enum EnAnimationState
+	{
+		IDLE,
+		WALK,
+		RUN,
+		SHOT
+	};
+	int m_bodyAnimationStateNumber;
+	int m_footAnimationStateNumber;
+
+	enum EnAnimationClips_Body
+	{
+		B_ANIMATION_IDLE,
+		B_ANIMATION_WALK,
+		B_ANIMATION_RUN,
+		B_ANIMATION_SHOT,
+		B_ANIMATION_NUM
+	};
+	AnimationClip m_playerBodyAnimationClips[B_ANIMATION_NUM];
+
+
+	enum EnAnimationClips_Foot
+	{
+		F_ANIMATION_IDLE,
+		F_ANIMATION_WALK,
+		F_ANIMATION_NUM
+	};
+	AnimationClip m_playerFootAnimationClips[F_ANIMATION_NUM];
 
 };
 

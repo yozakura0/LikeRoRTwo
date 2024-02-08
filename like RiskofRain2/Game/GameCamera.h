@@ -29,6 +29,11 @@ public:
 		g_camera3D->SetPosition(m_pos);
 	}
 
+	Matrix GetAngle()
+	{
+		return m_springCamera.GetCameraRotation();
+	}
+
 private:
 	Vector3 m_pos;
 	Vector3 m_target;

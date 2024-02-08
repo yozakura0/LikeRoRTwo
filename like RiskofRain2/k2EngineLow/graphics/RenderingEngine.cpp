@@ -169,6 +169,9 @@ namespace nsK2EngineLow {
 			obj2D->OnRender2D(rc);
 		}
 
+		//エフェクトを描画
+		EffectEngine::GetInstance()->Draw();
+
 		CopyMainRenderTargetToFrameBuffer(rc);
 
 		//shadowSprite.Update({ FRAME_BUFFER_W / -2.0f,FRAME_BUFFER_H / 2.0f,0.0f }, g_quatIdentity, g_vec3One, { 0.0f,1.0f });

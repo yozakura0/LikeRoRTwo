@@ -1,6 +1,7 @@
 #pragma once
 #include "Number.h"
 
+class Game;
 class Player;
 class ItemBox;
 class ItemManager;
@@ -39,6 +40,24 @@ private:
 	//レア箱がでるかのフラグ
 	bool m_setRareBoxFlag = false;
 
+	//今のレベル
+	int m_level = 0;
+
+	//現在の箱の値段
+	int m_nowBoxPrice;
+
+	//箱の初期値段
+	const int BoxDefaultPrice = 25;
+
+	//箱の値段増加量
+	const int BoxPriceMul = 7;
+
+	//アンコモン箱の値段倍率
+	const int UncommonboxPriceMul = 2;
+
+	//レア箱の値段倍率
+	const int RareboxPriceMul = 16;
+
 	//距離が近いか確認する値
 	float m_nearDistance = DefaultNearDistance;
 
@@ -69,6 +88,7 @@ private:
 	//判定中の箱を表す変数の初期値
 	const int DefaultJudgeBoxType = 0;
 
+	Game* m_game;
 	Player* m_player = nullptr;
 	ItemManager* m_itemManager = nullptr;
 

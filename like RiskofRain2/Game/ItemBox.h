@@ -16,9 +16,6 @@ public:
 	void Update();
 	void Render(RenderContext& rc);
 
-	//モデルレンダー
-	ModelRender m_itemBoxRender;
-
 	void SetPosition(Vector3 pos)
 	{
 		m_boxPos = pos;
@@ -37,8 +34,19 @@ public:
 	{
 		m_boxType = type;
 	}
+	void SetPrice(int price)
+	{
+		m_price = price;
+	}
+	int GetPrice()
+	{
+		return m_price;
+	}
 
 private:
+	//モデルレンダー
+	ModelRender m_itemBoxRender;
+
 	//座標
 	Vector3 m_boxPos;
 
@@ -50,6 +58,9 @@ private:
 
 	//箱タイプ
 	int m_boxType;
+
+	//値段
+	int m_price;
 
 	//アニメーション番号
 	enum m_openCommonBoxAnimation

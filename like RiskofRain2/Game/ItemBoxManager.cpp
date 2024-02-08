@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Game.h"
 #include "ItemBoxManager.h"
 #include "ItemBox.h"
 #include "ItemManager.h"
@@ -26,6 +27,8 @@ ItemBoxManager::~ItemBoxManager()
 
 void ItemBoxManager::SetBox()
 {
+	m_nowBoxPrice = BoxDefaultPrice + BoxPriceMul * m_level;
+
 	srand((unsigned int)time(NULL));
 	for (int i = 0; i < CommonBoxNum; i++)
 	{
@@ -33,6 +36,7 @@ void ItemBoxManager::SetBox()
 		m_commonItemBox[i] = NewGO<ItemBox>(0, "commonItemBox");
 		m_commonItemBox[i]->SetPosition(m_commonBoxPos[i]);
 		m_commonItemBox[i]->SetBoxType(Common);
+		m_commonItemBox[i]->SetPrice(m_nowBoxPrice);
 		m_commonItemBox[i]->SetBox();
 	}
 	for (int i = 0; i < UncommonBoxNum; i++)
@@ -41,6 +45,7 @@ void ItemBoxManager::SetBox()
 		m_uncommonItemBox[i] = NewGO<ItemBox>(0, "uncommonItemBox");
 		m_uncommonItemBox[i]->SetPosition(m_uncommonBoxPos[i]);
 		m_uncommonItemBox[i]->SetBoxType(Uncommon);
+		m_uncommonItemBox[i]->SetPrice(m_nowBoxPrice * UncommonboxPriceMul);
 		m_uncommonItemBox[i]->SetBox();
 	}
 
@@ -50,6 +55,7 @@ void ItemBoxManager::SetBox()
 		m_rareItemBox[0] = NewGO<ItemBox>(0, "rareItemBox");
 		m_rareItemBox[0]->SetPosition(m_rareBoxPos[0]);
 		m_rareItemBox[0]->SetBoxType(Rare);
+		m_rareItemBox[0]->SetPrice(m_nowBoxPrice * RareboxPriceMul);
 		m_rareItemBox[0]->SetBox();
 	}
 	/*m_commonItemBox[0] = NewGO<ItemBox>(0, "commonItemBox");
@@ -81,6 +87,15 @@ Vector3 ItemBoxManager::SetPosition()
 
 void ItemBoxManager::Update()
 {
+	if (m_game == nullptr)
+	{
+		m_game = FindGO<Game>("game");
+	}
+	else
+	{
+		m_level = m_game->GetEnemyLevel();
+	}
+
 	if (m_player == nullptr)
 	{
 		m_player = FindGO<Player>("player");
@@ -122,32 +137,49 @@ void ItemBoxManager::OpenBoxManage()
 			switch (m_nearBoxType)
 			{
 			case 0:
-				m_boxOpen = m_commonItemBox[m_nearBoxNum]->OpenBoxFlag(); 
-				if (m_boxOpen == false)
+				//‚¨‹à‚ª‘«‚è‚È‚¢‚©
+				if (m_player->GetMoney() < m_commonItemBox[m_nearBoxNum]->GetPrice())
+				{
+					return;
+				}
+				//‚·‚Å‚ÉŠJ‚¢‚Ä‚é‚©
+				if (m_commonItemBox[m_nearBoxNum]->OpenBoxFlag() == false)
 				{
 					return;
 				}
 
 				m_itemManager->SetItem(m_commonBoxPos[m_nearBoxNum], m_nearBoxType);
+				m_player->DecMoney(m_commonItemBox[m_nearBoxNum]->GetPrice());
 				break;
 			case 1:
-				m_boxOpen = m_uncommonItemBox[m_nearBoxNum]->OpenBoxFlag();
-				if (m_boxOpen == false)
+				//‚¨‹à‚ª‘«‚è‚È‚¢‚©
+				if (m_player->GetMoney() < m_uncommonItemBox[m_nearBoxNum]->GetPrice())
+				{
+					return;
+				}
+				//‚·‚Å‚ÉŠJ‚¢‚Ä‚é‚©
+				if (m_uncommonItemBox[m_nearBoxNum]->OpenBoxFlag() == false)
 				{
 					return;
 				}
 				
 				m_itemManager->SetItem(m_uncommonBoxPos[m_nearBoxNum], m_nearBoxType);
+				m_player->DecMoney(m_uncommonItemBox[m_nearBoxNum]->GetPrice());
 				break;
 			case 2:
-				m_boxOpen = m_rareItemBox[m_nearBoxNum]->OpenBoxFlag();
-				if (m_boxOpen == false)
+				//‚¨‹à‚ª‘«‚è‚È‚¢‚©
+				if (m_player->GetMoney() < m_rareItemBox[m_nearBoxNum]->GetPrice())
+				{
+					return;
+				}
+				//‚·‚Å‚ÉŠJ‚¢‚Ä‚é‚©
+				if (m_rareItemBox[m_nearBoxNum]->OpenBoxFlag() == false)
 				{
 					return;
 				}
 
 				m_itemManager->SetItem(m_rareBoxPos[m_nearBoxNum], m_nearBoxType);
-				
+				m_player->DecMoney(m_rareItemBox[m_nearBoxNum]->GetPrice());
 				break;
 			default:
 				break;

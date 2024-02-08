@@ -1,196 +1,94 @@
-/*!
- * @brief	ã‚·ãƒ³ãƒ—ãƒ«ãªãƒ¢ãƒ‡ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã€‚
- */
 
+///////////////////////////////////////
+// \‘¢‘ÌB
+///////////////////////////////////////
 
-////////////////////////////////////////////////
-// å®šæ•°ãƒãƒƒãƒ•ã‚¡ã€‚
-////////////////////////////////////////////////
-//ãƒ¢ãƒ‡ãƒ«ç”¨ã®å®šæ•°ãƒãƒƒãƒ•ã‚¡
-cbuffer ModelCb : register(b0){
-	float4x4 mWorld;
-	float4x4 mView;
-	float4x4 mProj;
-};
-
-////////////////////////////////////////////////
-// æ§‹é€ ä½“
-////////////////////////////////////////////////
-//é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸ã®å…¥åŠ›ã€‚
-struct SVSIn{
-	float4 pos 		: POSITION;		//ãƒ¢ãƒ‡ãƒ«ã®é ‚ç‚¹åº§æ¨™ã€‚
-	float3 normal	: NORMAL;
-	float2 uv 		: TEXCOORD0;	//UVåº§æ¨™ã€‚
-	float3 tangent	: TANGENT;		//æ¥ãƒ™ã‚¯ãƒˆãƒ«
-	float3 biNormal	: BINORMAL;		//å¾“ãƒ™ã‚¯ãƒˆãƒ«
-	int4 Indices	: BLENDINDICES0;
-	float4 Weights	: BLENDWEIGHT0;
-};
-//ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸ã®å…¥åŠ›ã€‚
-struct SPSIn{
-	float4 pos 			: SV_POSITION;	//ã‚¹ã‚¯ãƒªãƒ¼ãƒ³ç©ºé–“ã§ã®ãƒ”ã‚¯ã‚»ãƒ«ã®åº§æ¨™ã€‚
-	float3 normal		: NORMAL;
-	float3 tangent		: TANGENT;
-	float3 biNormal		: BINORMAL;
-	float2 uv 			: TEXCOORD0;	//uvåº§æ¨™ã€‚
-	float3 worldPos		: TEXCOORD1;
-};
-cbuffer SkyCubeCb; register(b1)
+// ƒsƒNƒZƒ‹ƒVƒF[ƒ_[‚Ö‚Ì“ü—Í
+struct SPSIn
 {
-	float luminance;	//æ˜ã‚‹ã•
-}
+	float4 pos : SV_POSITION;       //À•WB
+	float3 normal : NORMAL;         //–@üB
+	float3 tangent  : TANGENT;      //ÚƒxƒNƒgƒ‹B
+	float3 biNormal : BINORMAL;     //]ƒxƒNƒgƒ‹B
+	float2 uv : TEXCOORD0;          //UVÀ•WB
+	float3 worldPos : TEXCOORD1;    // ƒ[ƒ‹ƒhÀ•W
+};
+cbuffer SkyCubeCb : register(b1)
+{
+    float luminance;	// –¾‚é‚³B
+};
 
-////////////////////////////////////////////////
-// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°ã€‚
-////////////////////////////////////////////////
-Texture2D<float4> g_albedo : register(t0);				//ã‚¢ãƒ«ãƒ™ãƒ‰ãƒãƒƒãƒ—
-Texture2D<float4> g_normal : register(t1);
-Texture2D<float4> g_spacular : register(t2);
-StructuredBuffer<float4x4> g_boneMatrix : register(t3);	//ãƒœãƒ¼ãƒ³è¡Œåˆ—ã€‚
-StructuredBuffer<float4x4> g_worldMatrixArray : register(t10);//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ã®é…åˆ—ã€‚
+///////////////////////////////////////
+// ’¸“_ƒVƒF[ƒ_[‚Ì‹¤’Êˆ—‚ğƒCƒ“ƒNƒ‹[ƒh‚·‚éB
+///////////////////////////////////////
+#include "ModelVSCommon.h"
+
+///////////////////////////////////////
+// ƒVƒF[ƒ_[ƒŠƒ\[ƒX
+///////////////////////////////////////
+Texture2D<float4> g_albedo : register(t0);      //ƒAƒ‹ƒxƒhƒ}ƒbƒv
+Texture2D<float4> g_normal : register(t1);      //–@üƒ}ƒbƒv
+Texture2D<float4> g_spacular : register(t2);    //ƒXƒyƒLƒ…ƒ‰ƒ}ƒbƒv
 TextureCube<float4> g_skyCubeMap : register(t10);
 
-sampler g_sampler : register(s0);	//ã‚µãƒ³ãƒ—ãƒ©ã‚¹ãƒ†ãƒ¼ãƒˆã€‚
+///////////////////////////////////////
+// ƒTƒ“ƒvƒ‰[ƒXƒe[ƒg
+///////////////////////////////////////
+sampler g_sampler : register(s0);
+
 
 ////////////////////////////////////////////////
-// é–¢æ•°å®šç¾©ã€‚
+// ŠÖ”’è‹`B
 ////////////////////////////////////////////////
 
-/// <summary>
-//ã‚¹ã‚­ãƒ³è¡Œåˆ—ã‚’è¨ˆç®—ã™ã‚‹ã€‚
-/// </summary>
-float4x4 CalcSkinMatrix(SSkinVSIn skinVert)
-{
-	float4x4 skinning = 0;	
-	float w = 0.0f;
-	[unroll]
-    for (int i = 0; i < 3; i++)
-    {
-        skinning += g_boneMatrix[skinVert.Indices[i]] * skinVert.Weights[i];
-        w += skinVert.Weights[i];
-    }
-    
-    skinning += g_boneMatrix[skinVert.Indices[3]] * (1.0f - w);
-	
-    return skinning;
-}
-//ãƒ¯ãƒ¼ãƒ«ãƒ‰ç©ºé–“ã®é ‚ç‚¹åº§æ¨™ã‚’è¨ˆç®—ã™ã‚‹
-float4 CalcVertexPositionInWorldSpace(float4 vertexPos, float4x4 mWorld, uniform bool isUsePreComputedVertexBuffer)
-{
-	float4 pos;
-	if (isUsePreComputedVertexBuffer)
-	{
-		pos = vertexPos;
-	}
-	else
-	{
-		pos = mul(mWorld, vertexPos);
-	}
-
-	return pos;
-}
-/// <summary>
-/// ã‚¹ã‚­ãƒ³ãªã—ãƒ¡ãƒƒã‚·ãƒ¥ç”¨ã®é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã®ã‚¨ãƒ³ãƒˆãƒªãƒ¼é–¢æ•°ã€‚
-/// </summary>
-SPSIn VSMain(SVSIn vsIn)
-{
-	return VSMainCore(vsIn, false);
-}
-/// <summary>
-/// ã‚¹ã‚­ãƒ³ã‚ã‚Šãƒ¡ãƒƒã‚·ãƒ¥ã®é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã®ã‚¨ãƒ³ãƒˆãƒªãƒ¼é–¢æ•°ã€‚
-/// </summary>
-SPSIn VSMainSkin( SVSIn vsIn ) 
-{
-	return VSMainCore(vsIn, true);
-}
-//äº‹å‰è¨ˆç®—æ¸ˆã¿ã®é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã‚’ä½¿ã†é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã®ã‚¨ãƒ³ãƒˆãƒªãƒ¼é–¢æ•°
-//ã‚¹ã‚­ãƒ³ã‚ã‚Šãƒ¡ãƒƒã‚·ãƒ¥ç”¨
-SPSIn VSMainSkinUsePreComputedVertwxBuffer(SVSIn vsIn)
-{
-	return VSMainCore(vsIn, (float4x4)0, true);
-}
-//äº‹å‰è¨ˆç®—æ¸ˆã¿ã®é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã‚’ä½¿ã†é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã®ã‚¨ãƒ³ãƒˆãƒªãƒ¼é–¢æ•°
-//ã‚¹ã‚­ãƒ³ãªã—ãƒ¡ãƒƒã‚·ãƒ¥ç”¨
-SPSIn VSMainUsePreComputedVertwxBuffer(SVSIn vsIn)
-{
-	return VSMainCore(vsIn, (float4x4)0, true);
-}
-//ãƒ¯ãƒ¼ãƒ«ãƒ‰ã‚¹ãƒšãƒ¼ã‚¹ã®æ³•ç·šã€æ¥ãƒ™ã‚¯ãƒˆãƒ«ã€å¾“ãƒ™ã‚¯ãƒˆãƒ«ã‚’è¨ˆç®—ã™ã‚‹
-void CalcVertexNormalTangentBiNormalInWorldSpace(
-	out float3 oNormal,
-	out float3 oTangent,
-	out float3 oBiNormal,
-	float4x4 mWorld,
-	float3 iNormal,
-	float3 iTangent,
-	float3 iBiNormal,
-	uniform bool isUsePreComputedVertexBuffer
-)
-{
-	if (isUsePreComputedVertexBuffer)
-	{
-		//äº‹å‰è¨ˆç®—æ¸ˆã¿é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã‚’åˆ©ç”¨
-		oNormal = iNormal;
-		oTangent = iTangent;
-		oBiNormal = iBiNormal;
-	}
-	else
-	{
-		float3x3 m3x3 = (float3x3)mWorld;
-		oNormal = normalize(mul(m3x3, iNormal));
-		oTangent = normalize(mul(m3x3, iTangent));
-		oBiNormal = normalize(mul(m3x3, iBiNormal));
-	}
-}
-//æ³•ç·šãƒãƒƒãƒ—ã‹ã‚‰æ³•ç·šã‚’å–å¾—
+// –@üƒ}ƒbƒv‚©‚ç–@ü‚ğæ“¾B
 float3 GetNormalFromNormalMap(float3 normal, float3 tangent, float3 biNormal, float2 uv)
 {
-	float3 binSpaceNoemal = g_normal.SampleLevel(g_sampler, uv, 0.0f).xyz;
+	float3 binSpaceNormal = g_normal.SampleLevel(g_sampler, uv, 0.0f).xyz;
 	binSpaceNormal = (binSpaceNormal * 2.0f) - 1.0f;
 
 	float3 newNormal = tangent * binSpaceNormal.x + biNormal * binSpaceNormal.y + normal * binSpaceNormal.z;
 
 	return newNormal;
 }
-/// <summary>
-/// ãƒ¢ãƒ‡ãƒ«ç”¨é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã®ã‚¨ãƒ³ãƒˆãƒªãƒ¼ãƒã‚¤ãƒ³ãƒˆ
-/// </summary>
-SPSIn VSMainCore(SVSIn vsIn, uniform bool hasSkin)
+
+// ƒ‚ƒfƒ‹—p‚Ì’¸“_ƒVƒF[ƒ_[‚ÌƒGƒ“ƒgƒŠ[ƒ|ƒCƒ“ƒg
+SPSIn VSMainCore(SVSIn vsIn, float4x4 mWorldLocal, uniform bool isUsePreComputedVertexBuffer)
 {
 	SPSIn psIn;
+	// ’¸“_À•W‚ğƒ[ƒ‹ƒhÀ•WŒn‚É•ÏŠ·‚·‚éB
+    psIn.pos = CalcVertexPositionInWorldSpace(vsIn.pos, mWorldLocal, isUsePreComputedVertexBuffer);
 
-	//é ‚ç‚¹åº§æ¨™ã‚’ãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã«å¤‰æ›ã™ã‚‹
-	psIn.pos = CalcVertexPositionInWorldSpace(vsIn.pos, mWorldLocal, isUsePreComputedVertexBuffer);
-
-	//é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‹ã‚‰ãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã‚’å‡ºåŠ›
+	// ’¸“_ƒVƒF[ƒ_[‚©‚çƒ[ƒ‹ƒhÀ•W‚ğo—Í
 	psIn.worldPos = (float3)psIn.pos;
-	psIn.pos = mul(mView, psIn.pos);
-	psIn.pos = mul(mProj, psIn.pos);
+	psIn.pos = mul(mView, psIn.pos); // ƒ[ƒ‹ƒhÀ•WŒn‚©‚çƒJƒƒ‰À•WŒn‚É•ÏŠ·
+	psIn.pos = mul(mProj, psIn.pos); // ƒJƒƒ‰À•WŒn‚©‚çƒXƒNƒŠ[ƒ“À•WŒn‚É•ÏŠ·
 
-	//ãƒ¯ãƒ¼ãƒ«ãƒ‰ç©ºé–“ã®æ³•ç·šã€æ¥ãƒ™ã‚¯ãƒˆãƒ«ã€å¾“ãƒ™ã‚¯ãƒˆãƒ«ã‚’è¨ˆç®—ã™ã‚‹
+	// ƒ[ƒ‹ƒh‹óŠÔ‚Ì–@üAÚƒxƒNƒgƒ‹A]ƒxƒNƒgƒ‹‚ğŒvZ‚·‚éB
 	CalcVertexNormalTangentBiNormalInWorldSpace(
 		psIn.normal,
 		psIn.tangent,
 		psIn.biNormal,
-		mWorldLocal.
+		mWorldLocal,
 		vsIn.normal,
 		vsIn.tangent,
 		vsIn.biNormal,
 		isUsePreComputedVertexBuffer
 	);
-
+	
 	psIn.uv = vsIn.uv;
-
+	
 	return psIn;
 }
+
 /// <summary>
-/// ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã®ã‚¨ãƒ³ãƒˆãƒªãƒ¼é–¢æ•°ã€‚
+/// ƒsƒNƒZƒ‹ƒVƒF[ƒ_[‚ÌƒGƒ“ƒgƒŠ[ŠÖ”B
 /// </summary>
 float4 PSMain(SPSIn psIn) : SV_Target0
 {
 	float4 albedoColor;
 	float3 normal = normalize(psIn.normal);
+	//albedoColor = g_skyCubeMap.Sample(g_sampler, psIn.normal);
 	albedoColor = g_skyCubeMap.Sample(g_sampler, normal * -1.0f) * luminance;
-
 	return albedoColor;
 }

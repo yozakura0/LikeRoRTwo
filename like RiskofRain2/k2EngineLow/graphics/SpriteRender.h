@@ -34,6 +34,16 @@ namespace nsK2EngineLow {
 			m_rotation = rot;
 		}
 
+		//乗算カラーを設定
+		void SetMulColor(const Vector4& mulColor)
+		{
+			m_sprite.SetMulColor(mulColor);
+		}
+		//乗算カラーを取得
+		const Vector4& GetMulColor() const
+		{
+			return m_sprite.GetMulColor();
+		}
 		//更新処理
 		void Update()
 		{

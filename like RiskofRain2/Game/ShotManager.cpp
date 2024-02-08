@@ -19,7 +19,7 @@ void ShotManager::NormalShot()
 	//コリジョンオブジェクトを作成する。
 	m_collisionObject = NewGO<CollisionObject>(0);
 	//球状のコリジョンを作成する。
-	m_collisionObject->CreateSphere(m_position, Quaternion::Identity, 5.0f * m_scale.z);
+	m_collisionObject->CreateSphere(m_position, Quaternion::Identity, 7.0f * m_scale.z);
 
 	//移動速度を計算
 	//m_rotation.SetRotation(m_position, m_gameCamera->m_rayHitPos);
@@ -27,7 +27,7 @@ void ShotManager::NormalShot()
 	//m_rotation.Apply(m_moveSpeed);
 	m_moveSpeed.Normalize();
 	m_position += m_moveSpeed * 50.0f;
-	m_moveSpeed *= 7000.0f;
+	m_moveSpeed *= 10000.0f;
 
 	m_collisionObject->SetIsEnableAutoDelete(false);
 
@@ -44,7 +44,7 @@ void ShotManager::Update()
 	//タイマーを加算する
 	m_timer += g_gameTime->GetFrameDeltaTime();
 
-	if (m_timer >= 0.5f)
+	if (m_timer >= 0.2f)
 	{
 		DeleteGO(this);
 	}

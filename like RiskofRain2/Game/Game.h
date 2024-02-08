@@ -17,13 +17,6 @@ public:
 	void Timer();
 	void Render(RenderContext& rc);
 
-	//モデルレンダー
-	ModelRender m_modelRender;
-
-
-
-	ModelRender m_teapotRender;
-
 	//経過フレーム数
 	int m_frameCount = FirstFrameCount;
 	//初期化値
@@ -38,7 +31,16 @@ public:
 	//初期化値
 	const int FirstMinuteCount = 0;
 
+	//敵のレベルを取得する
+	int GetEnemyLevel()
+	{
+		return m_enemyLevel;
+	}
+
 private:
+	//敵のレベル
+	int m_enemyLevel = 0;
+
 	//モデルの座標
 	Vector3 m_modelPos = { 0.0f,0.0f,0.0f };
 
@@ -48,6 +50,8 @@ private:
 	//modelSLight m_light;
 	int m_pointNum;
 
+	//空
+	SkyCube* m_skyCube = nullptr;
 	//プレイヤー
 	Player* m_player = nullptr;
 	//背景

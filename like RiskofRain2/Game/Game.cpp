@@ -10,8 +10,16 @@
 #include "EnemyManager.h"
 #include "UI.h"
 
+#include "graphics/effect/EffectEmitter.h"
+
 Game::Game()
 {
+	EffectEngine::GetInstance()->ResistEffect(0, u"Assets/effect/impact.efk");
+	EffectEngine::GetInstance()->ResistEffect(1, u"Assets/effect/moneydrop.efk");
+	EffectEngine::GetInstance()->ResistEffect(2, u"Assets/effect/dronesporn.efk");
+
+	//m_skyCube = NewGO<SkyCube>(0, "skycube");
+
 	m_player = NewGO<Player>(0, "player");
 	m_backGround = NewGO<BackGround>(0, "backGround");
 	m_gameCamera = NewGO<GameCamera>(0, "gameCamera");
@@ -30,13 +38,15 @@ Game::Game()
 	////m_pointLight.SetAffectPowParam(0.7f);
 	//m_pointLight.SetRange(100.0f, pointNum);
 
+
 	//当たり判定を有効化する。
-	PhysicsWorld::GetInstance()->EnableDrawDebugWireFrame();
+	//PhysicsWorld::GetInstance()->EnableDrawDebugWireFrame();
 }
 
 Game::~Game()
 {
 	DeleteGO(m_player);
+	//DeleteGO(m_skyCube);
 	DeleteGO(m_backGround);
 	DeleteGO(m_gameCamera);
 }
@@ -70,19 +80,30 @@ void Game::Update()
 
 void Game::Timer()
 {
+	//フレーム経過数を計測
 	m_frameCount++;
 
+	//秒数を進める
 	if (m_frameCount >= 60)
 	{
 		m_frameCount = 0;
 		m_secondCount++;
 	}
 
+	//分数を進める
 	if (m_secondCount >= 60)
 	{
 		m_secondCount = 0;
 		m_minuteCount++;
 	}
+
+	//敵のレベルアップ処理
+	if (m_minuteCount)
+	{
+
+	}
+
+	m_ui->SetTime(m_minuteCount, m_secondCount);
 }
 
 void Game::Render(RenderContext& rc)

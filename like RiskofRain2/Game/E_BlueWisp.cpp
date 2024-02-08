@@ -18,6 +18,9 @@ E_BlueWisp::E_BlueWisp()
 
 	m_player = FindGO<Player>("player");
 
+	// ナビメッシュを構築。
+	m_nvmMesh.Init("Assets/nvm/a.tkn");
+
 	m_blueWispRender.AddAnimationEvent
 	([&](const wchar_t* clipName, const wchar_t* eventName)
 		{
@@ -25,8 +28,20 @@ E_BlueWisp::E_BlueWisp()
 		}
 	);
 
-	//EffectEngine::GetInstance()->ResistEffect(0, u"Assets/effect/fire.efk");
-	//EffectEngine::GetInstance()->ResistEffect(0, u"Assets/effect/fire_b.efk");
+	//EffectEngine::GetInstance()->ResistEffect(0, u"Assets/effect/test_fire1.efk");
+	EffectEngine::GetInstance()->ResistEffect(0, u"Assets/effect/laser.efk");
+
+	//effectEmitter = NewGO<EffectEmitter>(0);
+	//effectEmitter->Init(0);
+}
+
+E_BlueWisp::~E_BlueWisp()
+{
+	if (m_blueWispStateNumber == BROKEN)
+	{
+		m_player->AddMoney(m_dropMoney);
+	}
+	
 }
 
 void E_BlueWisp::ShowBlueWisp()
@@ -44,6 +59,14 @@ void E_BlueWisp::ShowBlueWisp()
 
 	m_blueWispRender.PlayAnimation(BLUEWISP_ENTRY, 0.2f);
 	m_blueWispRender.SetAnimationSpeed(1.0f);
+
+	SetStatus();
+}
+
+void E_BlueWisp::SetStatus()
+{
+	m_HP += AddHPtoLv * m_Level;
+	m_damage += AddDamagetoLv * m_Level;
 }
 
 void E_BlueWisp::Move()
@@ -67,9 +90,15 @@ void E_BlueWisp::Move()
 		5.0f,
 		isEnd
 	);
-	m_pos.y += 100.0f;
+	
+	//座標を高くして浮いてるようにする
+	Vector3 resultPos = m_pos;
+	resultPos.y += 100.0f;
 
-	m_blueWispRender.SetPosition(m_pos);
+	m_blueWispController.SetPosition(resultPos);
+	m_blueWispController.Execute(m_moveSpeed, g_gameTime->GetFrameDeltaTime());
+
+	m_blueWispRender.SetPosition(resultPos);
 	m_blueWispRender.Update();
 }
 
@@ -200,11 +229,11 @@ void E_BlueWisp::AnimationState()
 		break;
 	case MOVE:
 		m_blueWispRender.PlayAnimation(BLUEWISP_MOVE, 0.2f);
-		m_blueWispRender.SetAnimationSpeed(1.0f);
+		m_blueWispRender.SetAnimationSpeed(0.5f);
 		break;
 	case ATTACK_RANGE:
 		m_blueWispRender.PlayAnimation(BLUEWISP_ATTACK, 0.2f);
-		m_blueWispRender.SetAnimationSpeed(1.0f);
+		m_blueWispRender.SetAnimationSpeed(0.5f);
 		break;
 	case BROKEN:
 		m_blueWispRender.PlayAnimation(BLUEWISP_BREAK, 0.2f);
@@ -245,6 +274,16 @@ void E_BlueWisp::Damage()
 			m_invincibleFlag = true;
 		}
 	}
+
+	if (m_invincibleFlag)
+	{
+		EffectEmitter* effectEmitter = NewGO<EffectEmitter>(0);
+
+		effectEmitter->Init(0);
+		effectEmitter->SetScale({ 10.0f,10.0f,10.0f });
+		effectEmitter->SetPosition({ m_pos.x,m_pos.y + 40.0f,m_pos.z });
+		effectEmitter->Play();
+	}
 }
 
 void E_BlueWisp::Update()
@@ -255,10 +294,28 @@ void E_BlueWisp::Update()
 
 		if (m_blueWispRender.PlayingAnimation() == false)
 		{
+			EffectEmitter* effectEmitter = NewGO<EffectEmitter>(0);
+
+			effectEmitter->Init(1);
+			effectEmitter->SetScale({ 10.0f,10.0f,10.0f });
+			effectEmitter->SetPosition({ m_pos.x,m_pos.y + 40.0f,m_pos.z });
+			effectEmitter->Play();
+
 			DeleteGO(this);
 		}
 		return;
 	}
+
+	//EffectEmitter* effectEmitter = NewGO<EffectEmitter>(0);
+	//effectEmitter->Init(0);
+	//effectEmitter->SetScale({ 1.0f,1.0f,1.0f });
+	//effectEmitter->SetPosition(m_pos);
+	/*effectEmitter->Update();*/
+
+	/*if (effectEmitter->IsPlay() != true)
+	{
+		effectEmitter->Play();
+	}*/
 
 	Damage();
 
@@ -269,14 +326,9 @@ void E_BlueWisp::Update()
 		return;
 	}
 
-	/*Move();
-	Rotation();*/
-
-	/*EffectEmitter* effectEmitter = NewGO<EffectEmitter>(0);
-	effectEmitter->Init(0);
-	effectEmitter->SetScale({ 5.0f,5.0f,5.0f });
-	effectEmitter->Play();*/
-
+	Move();
+	Rotation();
+	
 	Attack();
 	AttackCoolCount();
 	StateManage();

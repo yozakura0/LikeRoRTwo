@@ -15,12 +15,23 @@ E_Beetle::E_Beetle()
 	
 	m_player = FindGO<Player>("player");
 
+	// ナビメッシュを構築。
+	m_nvmMesh.Init("Assets/nvm/a.tkn");
+
 	m_beetleRender.AddAnimationEvent
 	([&](const wchar_t* clipName, const wchar_t* eventName)
 		{
 			OnAnimationEvent(clipName, eventName);
 		}
 	);
+}
+
+E_Beetle::~E_Beetle()
+{
+	if (m_beetleStateNumber == BROKEN)
+	{
+		m_player->AddMoney(m_dropMoney);
+	}
 }
 
 void E_Beetle::ShowBeetle()
@@ -34,6 +45,14 @@ void E_Beetle::ShowBeetle()
 	m_beetleRender.Init("Assets/modelData/enemy/beetle.tkm", m_beetleAnimationClips, BEETLE_ANIMNUM);
 	m_beetleRender.SetPosition(m_pos);
 	m_beetleRender.SetScale(Vector3(2.0f, 2.0f, 2.0f));
+
+	SetStatus();
+}
+
+void E_Beetle::SetStatus()
+{
+	m_HP += AddHPtoLv * m_Level;
+	m_damage += AddDamagetoLv * m_Level;
 }
 
 void E_Beetle::Move()
@@ -55,6 +74,7 @@ void E_Beetle::Move()
 	);
 
 	m_beetleController.SetPosition(m_pos);
+	m_beetleController.Execute(m_moveSpeed, g_gameTime->GetFrameDeltaTime());
 	m_beetleRender.SetPosition(m_pos);
 	m_beetleRender.Update();
 }
@@ -154,11 +174,11 @@ void E_Beetle::AnimationState()
 		break;
 	case MOVE:
 		m_beetleRender.PlayAnimation(BEETLE_MOVE, 0.2f);
-		m_beetleRender.SetAnimationSpeed(1.0f);
+		m_beetleRender.SetAnimationSpeed(0.5f);
 		break;
 	case ATTACK_CLOSE:
 		m_beetleRender.PlayAnimation(BEETLE_ATTACK, 0.2f);
-		m_beetleRender.SetAnimationSpeed(1.0f);
+		m_beetleRender.SetAnimationSpeed(0.5f);
 		break;
 	case BROKEN:
 		m_beetleRender.PlayAnimation(BEETLE_BREAK, 0.2f);
@@ -268,6 +288,16 @@ void E_Beetle::Damage()
 			}
 		}
 	}
+
+	if (m_invincibleFlag)
+	{
+		EffectEmitter* effectEmitter = NewGO<EffectEmitter>(0);
+
+		effectEmitter->Init(0);
+		effectEmitter->SetScale({ 10.0f,10.0f,10.0f });
+		effectEmitter->SetPosition({ m_pos.x,m_pos.y + 40.0f,m_pos.z });
+		effectEmitter->Play();
+	}
 }
 
 void E_Beetle::Update()
@@ -278,6 +308,13 @@ void E_Beetle::Update()
 
 		if (m_beetleRender.PlayingAnimation() == false)
 		{
+			EffectEmitter* effectEmitter = NewGO<EffectEmitter>(0);
+
+			effectEmitter->Init(1);
+			effectEmitter->SetScale({ 10.0f,10.0f,10.0f });
+			effectEmitter->SetPosition({ m_pos.x,m_pos.y + 40.0f,m_pos.z });
+			effectEmitter->Play();
+
 			DeleteGO(this);
 		}
 		return;
@@ -292,8 +329,8 @@ void E_Beetle::Update()
 		return;
 	}
 
-	/*Move();
-	Rotation();*/
+	Move();
+	Rotation();
 
 	Attack();
 	StateManage();

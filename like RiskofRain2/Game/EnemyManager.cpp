@@ -2,10 +2,9 @@
 #include "EnemyManager.h"
 #include "E_Beetle.h"
 #include "E_Golem.h"
-//#include "E_Imp.h"
-//#include "E_Wisp.h"
 #include "E_RedWisp.h"
 #include "E_BlueWisp.h"
+#include "E_Drone.h"
 #include "Player.h"
 
 EnemyManager::EnemyManager()
@@ -42,6 +41,7 @@ void EnemyManager::SetEnemy()
 	int showPossibleEnemyCount = EnemyNum;
 	int m_ShowPossibleEnemyList[4];
 
+	//各敵が最大数まで出現しているか確認
 	if (m_beetleCount == BeetleMax)
 	{
 		showPossibleEnemyCount--;
@@ -53,15 +53,15 @@ void EnemyManager::SetEnemy()
 		m_ShowPossibleEnemyList[Beetle] = true;
 	}
 
-	if (m_redWispCount == RedWispMax) 
+	if (m_droneCount == DroneMax) 
 	{
 		showPossibleEnemyCount--; 
-		m_ShowPossibleEnemyList[RedWisp] = false;
+		m_ShowPossibleEnemyList[Drone] = false;
 	}
 	else
 	{
 		//m_showPossibleEnemyList->push_back(RedWisp);
-		m_ShowPossibleEnemyList[RedWisp] = true;
+		m_ShowPossibleEnemyList[Drone] = true;
 	}
 
 	if (m_blueWispCount == BlueWispMax)
@@ -89,6 +89,7 @@ void EnemyManager::SetEnemy()
 	//出せる敵がいない
 	if (showPossibleEnemyCount == 0)return;
 
+	//出す敵を選択
 	int showEnemyNum = rand() % showPossibleEnemyCount;
 
 	/*for (int i = 0; i < m_showPossibleEnemyList->size(); i++)
@@ -98,10 +99,13 @@ void EnemyManager::SetEnemy()
 		break;
 	}*/
 
+	//選ばれた敵がもう出せない
 	if (m_ShowPossibleEnemyList[showEnemyNum] == false)return;
 
+	//座標決め
 	int showPos = rand() % 6;
 
+	//敵をスポーンさせる
 	switch (showEnemyNum)
 	{
 	case Beetle:
@@ -111,6 +115,7 @@ void EnemyManager::SetEnemy()
 
 			m_beetle[i] = NewGO<E_Beetle>(0, "beetle");
 			m_beetle[i]->SetPosition(EnemyShowPosition[showPos]);
+			m_beetle[i]->SetDropMoney(MonsterMoney);
 			m_beetle[i]->ShowBeetle();
 			m_beetleCount++;
 			break;
@@ -123,19 +128,21 @@ void EnemyManager::SetEnemy()
 
 			m_blueWisp[i] = NewGO<E_BlueWisp>(0, "bluewisp");
 			m_blueWisp[i]->SetPosition(EnemyShowPosition[showPos]);
+			m_blueWisp[i]->SetDropMoney(MonsterMoney);
 			m_blueWisp[i]->ShowBlueWisp();
 			m_blueWispCount++;
 			break;
 		}
-	case RedWisp:
-		for (int i = 0; i < RedWispMax; i++)
+	case Drone:
+		for (int i = 0; i < DroneMax; i++)
 		{
-			if (m_redWisp[i] != nullptr) continue;
+			if (m_drone[i] != nullptr) continue;
 
-			m_redWisp[i] = NewGO<E_RedWisp>(0, "redwisp");
-			m_redWisp[i]->SetPosition(EnemyShowPosition[showPos]);
-			m_redWisp[i]->ShowRedWisp();
-			m_redWispCount++;
+			m_drone[i] = NewGO<E_Drone>(0, "drone");
+			m_drone[i]->SetPosition(EnemyShowPosition[showPos]);
+			m_drone[i]->SetDropMoney(MonsterMoney);
+			m_drone[i]->ShowDrone();
+			m_droneCount++;
 			break;
 		}
 	case Golem:
@@ -145,6 +152,7 @@ void EnemyManager::SetEnemy()
 
 			m_golem[i] = NewGO<E_Golem>(0, "golem");
 			m_golem[i]->SetPosition(EnemyShowPosition[showPos]);
+			m_golem[i]->SetDropMoney(EliteMonsterMoney);
 			m_golem[i]->ShowGolem();
 			m_golemCount++;
 			break;
@@ -158,6 +166,7 @@ void EnemyManager::SetEnemy()
 
 void EnemyManager::DeadEnemySearch()
 {
+	//各敵が死んでいないか調べる
 	for (int i = 0; i < BeetleMax; i++)
 	{
 		if (m_beetle[i] == nullptr)continue;
@@ -180,13 +189,13 @@ void EnemyManager::DeadEnemySearch()
 		}
 	}
 
-	for (int i = 0; i < RedWispMax; i++)
+	for (int i = 0; i < DroneMax; i++)
 	{
-		if (m_redWisp[i] == nullptr)continue;
-		if (m_redWisp[i]->IsDead())
+		if (m_drone[i] == nullptr)continue;
+		if (m_drone[i]->IsDead())
 		{
-			m_redWisp[i] = nullptr;
-			m_redWispCount--;
+			m_drone[i] = nullptr;
+			m_droneCount--;
 			m_enemyCount--;
 		}
 	}

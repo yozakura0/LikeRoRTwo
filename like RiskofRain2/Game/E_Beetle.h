@@ -9,7 +9,9 @@ class E_Beetle : public IGameObject
 {
 public:
 	E_Beetle();
+	~E_Beetle();
 	void ShowBeetle();
+	void SetStatus();
 	void Move();
 	void Rotation();
 	void MakeAttackCollision();
@@ -36,6 +38,17 @@ public:
 	//キャラクターコントローラー
 	CharacterController m_beetleController;
 
+	//落とす金額
+	void SetDropMoney(int money)
+	{
+		m_dropMoney = money;
+	}
+	//レベルを設定
+	void SetLevel(int Lv)
+	{
+		m_Level = Lv;
+	}
+
 private:
 	nsAI::NaviMesh m_nvmMesh;
 	nsAI::Path m_path;
@@ -45,7 +58,7 @@ private:
 	//座標
 	Vector3 m_pos;
 	//移動速度
-	Vector3 m_moveSpeed;
+	Vector3 m_moveSpeed = Vector3::Zero;
 	//前方向
 	Vector3 m_forward = Vector3::AxisZ;
 	//クォータニオン
@@ -56,11 +69,18 @@ private:
 	//当たり判定の高さ
 	const float CapsuleHeight = 20.0f;
 
+	//レベル
+	int m_Level = 0;
+
 	//体力
-	int m_HP = 50;
+	int m_HP = 80;
+	//体力の増加量
+	const int AddHPtoLv = 24;
 
 	//基礎ダメージ量
-	int m_damage;
+	int m_damage = 12;
+	//ダメージの増加量
+	const double AddDamagetoLv = 2.4;
 
 	//未攻撃フラグ
 	bool m_notAttack = true;
@@ -77,6 +97,9 @@ private:
 	float m_invincible = 0.0f;
 	//キャラの無敵時間
 	const float InvincibleTime = 0.1f;
+
+	//倒されたときにドロップする金額
+	int m_dropMoney;
 
 	//ビートルの状態
 	enum BeetleState

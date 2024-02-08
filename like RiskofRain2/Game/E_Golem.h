@@ -9,7 +9,9 @@ class E_Golem : public IGameObject
 {
 public:
 	E_Golem();
+	~E_Golem();
 	void ShowGolem();
+	void SetStatus();
 	void Move();
 	void Rotation();
 	void Attack();
@@ -39,6 +41,17 @@ public:
 	//キャラクターコントローラー
 	CharacterController m_golemController;
 
+	void SetDropMoney(int money)
+	{
+		m_dropMoney = money;
+	}
+
+	//レベルを設定
+	void SetLevel(int Lv)
+	{
+		m_Level = Lv;
+	}
+
 private:
 	nsAI::NaviMesh m_nvmMesh;
 	nsAI::Path m_path;
@@ -47,17 +60,26 @@ private:
 	//座標
 	Vector3 m_pos;
 	//移動速度
-	Vector3 m_moveSpeed;
+	Vector3 m_moveSpeed = Vector3::Zero;
 	//前方向
 	Vector3 m_forward = Vector3::AxisZ;
 	//クォータニオン
 	Quaternion m_rotation;
+	//移動する前の座標
+	Vector3 m_previousPos;
+
+	//レベル
+	int m_Level = 0;
 
 	//体力
-	int m_HP = 100;
+	int m_HP = 480;
+	//体力の増加量
+	const int AddHPtoLv = 144;
 
 	//基礎ダメージ量
-	int m_damage;
+	int m_damage = 20;
+	//ダメージの増加量
+	const double AddDamagetoLv = 4;
 
 	//近距離攻撃のクールタイム
 	float m_closeRangedAttackCool = 0.0f;
@@ -96,6 +118,9 @@ private:
 	float m_invincible = 0.0f;
 	//キャラの無敵時間
 	const float InvincibleTime = 0.1f;
+
+	//倒されたときにドロップする金額
+	int m_dropMoney;
 
 	//ゴーレムの状態
 	enum GolemState

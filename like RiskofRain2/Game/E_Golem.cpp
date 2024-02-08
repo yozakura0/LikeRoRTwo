@@ -2,6 +2,8 @@
 #include "E_Golem.h"
 #include "Player.h"
 
+#include "graphics/effect/EffectEmitter.h"
+
 E_Golem::E_Golem()
 {
 	m_golemAnimationClips[GOLEM_PUNCH].Load("Assets/animData/enemy/golem_punch.tka");
@@ -13,12 +15,24 @@ E_Golem::E_Golem()
 
 	m_player = FindGO<Player>("player");
 
+	// ナビメッシュを構築。
+	m_nvmMesh.Init("Assets/nvm/a.tkn");
+
 	m_golemRender.AddAnimationEvent
 	([&](const wchar_t* clipName, const wchar_t* eventName)
 		{
 			OnAnimationEvent(clipName, eventName);
 		}
 	);
+
+}
+
+E_Golem::~E_Golem()
+{
+	if (m_golemStateNumber == BROKEN)
+	{
+		m_player->AddMoney(m_dropMoney);
+	}
 }
 
 void E_Golem::ShowGolem()
@@ -32,13 +46,25 @@ void E_Golem::ShowGolem()
 	m_golemRender.Init("Assets/modelData/enemy/golem.tkm", m_golemAnimationClips, GOLEM_ANIMNUM);
 	m_golemRender.SetPosition(m_pos);
 
+	SetStatus();
+
 	m_bone = m_golemRender.GetBone(m_golemRender.FindBoneID(L"head"));
+	//Vector3  i = m_bone->SetRotation()
+
+	
+}
+
+void E_Golem::SetStatus()
+{
+	m_HP += AddHPtoLv * m_Level;
+	m_damage += AddDamagetoLv * m_Level;
 }
 
 void E_Golem::Move()
 {
 	bool isEnd;
 
+	m_previousPos = m_pos;
 	// パス検索
 	m_pathFiding.Execute(
 		m_path,							// 構築されたパスの格納先
@@ -50,36 +76,40 @@ void E_Golem::Move()
 		200.0f							// AIエージェントの高さ。
 	);
 
+
 	// パス上を移動する。
 	m_pos = m_path.Move(
 		m_pos,
-		5.0f,
+		2.0f,
 		isEnd
 	);
 
+	//Rot
 	Quaternion qgolem;
 	qgolem.SetRotation(m_bone->GetBonePosition(), m_player->m_position);
 
-	Vector3 one = { 1.0f,1.0f,1.0f };
+	//座標
+	auto pos = m_bone->GetBonePosition();
+	m_bone->SetRotation(qgolem);
 
-	m_bone->CalcWorldTRS(one, qgolem, one);
-
+	m_golemController.SetPosition(m_pos);
+	m_golemController.Execute(m_moveSpeed, g_gameTime->GetFrameDeltaTime());
 	m_golemRender.SetPosition(m_pos);
 	m_golemRender.Update();
-
+	
 }
 
 void E_Golem::Rotation()
 {
-	if (fabsf(m_moveSpeed.x) < 0.001f
+	/*if (fabsf(m_moveSpeed.x) < 0.001f
 		&& fabsf(m_moveSpeed.z) < 0.001f)
 	{
 		return;
-	}
+	}*/
 
-	float angle = atan2(-m_moveSpeed.x, m_moveSpeed.z);
+	//float angle = atan2(-m_moveSpeed.x, m_moveSpeed.z);
 
-	m_rotation.SetRotationY(-angle);
+	m_rotation.SetRotation(m_previousPos, m_pos);
 
 	m_golemRender.SetRotation(m_rotation);
 
@@ -296,6 +326,16 @@ void E_Golem::Damage()
 			}
 		}
 	}
+
+	if (m_invincibleFlag)
+	{
+		EffectEmitter* effectEmitter = NewGO<EffectEmitter>(0);
+
+		effectEmitter->Init(0);
+		effectEmitter->SetScale({ 10.0f,10.0f,10.0f });
+		effectEmitter->SetPosition({ m_pos.x,m_pos.y + 40.0f,m_pos.z });
+		effectEmitter->Play();
+	}
 }
 
 void E_Golem::StateManage()
@@ -328,7 +368,7 @@ void E_Golem::AnimationState()
 		break;
 	case ATTACK_CLOSE:
 		m_golemRender.PlayAnimation(GOLEM_PUNCH, 0.2f);
-		m_golemRender.SetAnimationSpeed(2.0f);
+		m_golemRender.SetAnimationSpeed(1.0f);
 		break;
 	case ATTACK_RANGE:
 
@@ -348,8 +388,16 @@ void E_Golem::Update()
 	{
 		m_golemRender.Update();
 
+
 		if (m_golemRender.PlayingAnimation() == false)
 		{
+			EffectEmitter* effectEmitter = NewGO<EffectEmitter>(0);
+
+			effectEmitter->Init(1);
+			effectEmitter->SetScale({ 10.0f,10.0f,10.0f });
+			effectEmitter->SetPosition({ m_pos.x,m_pos.y + 40.0f,m_pos.z });
+			effectEmitter->Play();
+
 			DeleteGO(this);
 		}
 		return;
@@ -359,14 +407,14 @@ void E_Golem::Update()
 
 
 
-	/*Move();
-	Rotation();*/
+	Move();
+	Rotation();
 
 	Attack();
 	AttackCoolCount();
 
-	StateManage();
-	AnimationState();
+	/*StateManage();
+	AnimationState();*/
 
 	//m_bone->SetRotation(m_bone->GetBonePosition(), m_player->m_position);
 	//m_bone->SetRotation(float(5.0f));

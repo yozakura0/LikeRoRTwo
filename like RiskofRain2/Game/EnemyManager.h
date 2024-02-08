@@ -2,8 +2,7 @@
 
 class E_Beetle;
 class E_Golem;
-//class E_Imp;
-class E_RedWisp;
+class E_Drone;
 class E_BlueWisp;
 class Player;
 
@@ -12,7 +11,9 @@ class EnemyManager : public IGameObject
 public:
 	EnemyManager();
 	~EnemyManager();
+	//敵を出現させる処理
 	void SetEnemy();
+	//死んだ敵を探す処理
 	void DeadEnemySearch();
 	void Update();
 
@@ -24,15 +25,15 @@ private:
 	int m_golemCount;
 	//インプの出現数
 	//int m_impCount;
-	//赤ウィスプの出現数
-	int m_redWispCount;
+	//ドローンの出現数
+	int m_droneCount;
 	//青ウィスプの出現数
 	int m_blueWispCount;
 
 	//敵の総出現数
 	int m_enemyCount;
 	//敵の限界出現数
-	const int MaxEnemyCount = 40;
+	const int MaxEnemyCount = 30;
 	
 	//敵の出てくる座標
 	const Vector3 EnemyShowPosition[6]
@@ -51,7 +52,7 @@ private:
 	{
 		Beetle,
 		BlueWisp,
-		RedWisp,
+		Drone,
 		Golem,
 		EnemyNum
 	};
@@ -59,10 +60,22 @@ private:
 	//各敵の上限数
 	enum EnemyLimit
 	{
-		BeetleMax = 12,
-		BlueWispMax = 12,
-		RedWispMax = 10,
-		GolemMax = 6
+		BeetleMax = /*12*/1,
+		BlueWispMax = /*12*/1,
+		DroneMax = /*10*/1,
+		GolemMax = /*6*/1
+	};
+
+	enum EnemyDefaultDropMoney
+	{
+		MonsterMoney = 5,
+		EliteMonsterMoney = 9,
+	};
+
+	enum EnemyDropMoneyMultiply
+	{
+		MonsterMoneyMul = 2,
+		EliteMonsterMoneyMul = 13,
 	};
 
 	//出せる敵のリスト
@@ -71,7 +84,7 @@ private:
 	E_Beetle* m_beetle[BeetleMax];
 	//E_Imp* m_imp;
 	E_BlueWisp* m_blueWisp[BlueWispMax];
-	E_RedWisp* m_redWisp[RedWispMax];
+	E_Drone* m_drone[DroneMax];
 	E_Golem* m_golem[GolemMax];
 	Player* m_player;
 };

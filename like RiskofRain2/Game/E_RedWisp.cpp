@@ -18,8 +18,19 @@ E_RedWisp::E_RedWisp()
 
 	m_player = FindGO<Player>("player");
 
+	// ナビメッシュを構築。
+	m_nvmMesh.Init("Assets/nvm/a.tkn");
+
 	//EffectEngine::GetInstance()->ResistEffect(0, u"Assets/effect/fire.efk");
 	//EffectEngine::GetInstance()->ResistEffect(0, u"Assets/effect/fire_b.efk");
+}
+
+E_RedWisp::~E_RedWisp()
+{
+	if (m_redWispStateNumber == BROKEN)
+	{
+		m_player->AddMoney(m_dropMoney);
+	}
 }
 
 void E_RedWisp::ShowRedWisp()
@@ -38,6 +49,14 @@ void E_RedWisp::ShowRedWisp()
 
 	m_redWispRender.PlayAnimation(REDWISP_ENTRY, 0.2f);
 	m_redWispRender.SetAnimationSpeed(1.0f);
+
+	SetStatus();
+}
+
+void E_RedWisp::SetStatus()
+{
+	m_HP += AddHPtoLv * m_Level;
+	m_damage += AddDamagetoLv * m_Level;
 }
 
 void E_RedWisp::Move()
@@ -61,9 +80,15 @@ void E_RedWisp::Move()
 		5.0f,
 		isEnd
 	);
-	m_pos.y += 100.0f;
+	
+	//座標を高くして浮いてるようにする
+	Vector3 resultPos = m_pos;
+	resultPos.y += 100.0f;
 
-	m_redWispRender.SetPosition(m_pos);
+	m_redWispController.SetPosition(resultPos);
+	m_redWispController.Execute(m_moveSpeed, g_gameTime->GetFrameDeltaTime());
+
+	m_redWispRender.SetPosition(resultPos);
 	m_redWispRender.Update();
 }
 
@@ -199,6 +224,16 @@ void E_RedWisp::Damage()
 			m_invincibleFlag = true;
 		}
 	}
+
+	if (m_invincibleFlag)
+	{
+		EffectEmitter* effectEmitter = NewGO<EffectEmitter>(0);
+
+		effectEmitter->Init(0);
+		effectEmitter->SetScale({ 10.0f,10.0f,10.0f });
+		effectEmitter->SetPosition({ m_pos.x,m_pos.y + 40.0f,m_pos.z });
+		effectEmitter->Play();
+	}
 }
 
 void E_RedWisp::Update()
@@ -209,6 +244,13 @@ void E_RedWisp::Update()
 
 		if (m_redWispRender.PlayingAnimation() == false)
 		{
+			EffectEmitter* effectEmitter = NewGO<EffectEmitter>(0);
+
+			effectEmitter->Init(1);
+			effectEmitter->SetScale({ 10.0f,10.0f,10.0f });
+			effectEmitter->SetPosition({ m_pos.x,m_pos.y + 40.0f,m_pos.z });
+			effectEmitter->Play();
+
 			DeleteGO(this);
 		}
 		return;
@@ -228,8 +270,8 @@ void E_RedWisp::Update()
 		return;
 	}
 
-	/*Move();
-	Rotation();*/
+	Move();
+	Rotation();
 	Attack();
 	AttackCoolCount();
 	StateManage();

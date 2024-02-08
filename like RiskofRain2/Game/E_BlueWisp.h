@@ -9,7 +9,9 @@ class E_BlueWisp : public IGameObject
 {
 public:
 	E_BlueWisp();
+	~E_BlueWisp();
 	void ShowBlueWisp();
+	void SetStatus();
 	void Move();
 	void Rotation();
 	void Attack();
@@ -38,6 +40,17 @@ public:
 	//キャラクターコントローラー
 	CharacterController m_blueWispController;
 
+	void SetDropMoney(int money)
+	{
+		m_dropMoney = money;
+	}
+
+	//レベルを設定
+	void SetLevel(int Lv)
+	{
+		m_Level = Lv;
+	}
+
 private:
 	nsAI::NaviMesh m_nvmMesh;
 	nsAI::Path m_path;
@@ -46,7 +59,7 @@ private:
 	//座標
 	Vector3 m_pos;
 	//移動速度
-	Vector3 m_moveSpeed;
+	Vector3 m_moveSpeed = Vector3::Zero;
 	//前方向
 	Vector3 m_forward = Vector3::AxisZ;
 	//クォータニオン
@@ -58,11 +71,18 @@ private:
 	//当たり判定の高さ
 	const float CapsuleHeight = 20.0f;
 
+	//レベル
+	int m_Level = 0;
+
 	//体力
 	int m_HP = 55;
+	//体力の増加量
+	const int AddHPtoLv = 15;
 
 	//基礎ダメージ量
-	int m_damage;
+	int m_damage = 5;
+	//ダメージの増加量
+	const double AddDamagetoLv = 1.6;
 
 	//遠距離攻撃フラグ
 	bool m_attackFlag;
@@ -86,6 +106,9 @@ private:
 	//キャラの無敵時間
 	const float InvincibleTime = 0.1f;
 
+	//倒されたときにドロップする金額
+	int m_dropMoney;
+
 	//ウィスプの状態
 	enum BlueWispState
 	{
@@ -108,4 +131,5 @@ private:
 	AnimationClip m_blueWispAnimationClips[BLUEWISP_ANIMNUM];
 
 	Player* m_player;
+	EffectEmitter* effectEmitter;
 };

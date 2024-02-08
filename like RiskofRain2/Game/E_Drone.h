@@ -5,12 +5,12 @@
 
 class Player;
 
-class E_RedWisp : public IGameObject
+class E_Drone : public IGameObject
 {
 public:
-	E_RedWisp();
-	~E_RedWisp();
-	void ShowRedWisp();
+	E_Drone();
+	~E_Drone();
+	void ShowDrone();
 	void SetStatus();
 	void Move();
 	void Rotation();
@@ -33,10 +33,10 @@ public:
 	}
 
 	//モデルレンダー
-	ModelRender m_redWispRender;
+	ModelRender m_droneRender;
 
 	//キャラクターコントローラー
-	CharacterController m_redWispController;
+	CharacterController m_droneController;
 
 	void SetDropMoney(int money)
 	{
@@ -105,18 +105,18 @@ private:
 	//倒されたときにドロップする金額
 	int m_dropMoney;
 
-	//ウィスプの状態
-	enum RedWispState
-	{
-		CREATE,
-		MOVE,
-		ATTACK_RANGE,
-		BROKEN
-	};
-	//状態を管理する変数
-	int m_redWispStateNumber = 0;
+	////ウィスプの状態
+	//enum RedWispState
+	//{
+	//	CREATE,
+	//	MOVE,
+	//	ATTACK_RANGE,
+	//	BROKEN
+	//};
+	////状態を管理する変数
+	//int m_redWispStateNumber = 0;
 
-	enum RedWispAnimation
+	/*enum RedWispAnimation
 	{
 		REDWISP_ENTRY,
 		REDWISP_MOVE,
@@ -124,7 +124,9 @@ private:
 		REDWISP_BREAK,
 		REDWISP_ANIMNUM
 	};
-	AnimationClip m_redWispAnimationClips[REDWISP_ANIMNUM];
+	AnimationClip m_redWispAnimationClips[REDWISP_ANIMNUM];*/
+
+	EffectEmitter* m_startEmitter;
 
 	Player* m_player;
 };

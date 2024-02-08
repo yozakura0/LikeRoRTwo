@@ -44,6 +44,8 @@ namespace nsK2EngineLow {
 		initData.m_expandConstantBuffer = &m_luminance;
 		initData.m_expandConstantBufferSize = sizeof(m_luminance);
 
+		m_modelRender.SetShadowCasterFlag(false);
+		m_modelRender.SetTRS(m_position, g_quatIdentity, m_scale);
 		m_modelRender.Update();
 
 		return true;

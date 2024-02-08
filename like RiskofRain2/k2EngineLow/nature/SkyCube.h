@@ -63,6 +63,7 @@ namespace nsK2EngineLow {
 	{
 	public:
 		SkyCube();
+		~SkyCube();
 		bool Start()override final;
 		void Update()override final;
 		void Render(RenderContext& rc)override final;
